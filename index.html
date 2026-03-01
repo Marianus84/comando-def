@@ -433,6 +433,33 @@
         "Ceder a este antojo me convierte en un pesimo ejemplo para mi hermano, mientras que aguantar y parar aca me da la fuerza para ayudarlo de verdad."
     ];
 
+    <button onclick="exportarDatos()" style="background:#3b82f6; color:white; padding:10px; border-radius:5px; margin-top:10px; width:100%;">📤 Exportar Backup</button>
+<input type="file" id="importFile" onchange="importarDatos(this)" style="display:none;">
+<button onclick="document.getElementById('importFile').click()" style="background:#10b981; color:white; padding:10px; border-radius:5px; margin-top:5px; width:100%;">📥 Importar Backup</button>
+
+<script>
+function exportarDatos() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "comando_v62_backup.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+
+function importarDatos(input) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        const importedData = JSON.parse(reader.result);
+        appData = importedData;
+        save();
+        location.reload();
+    };
+    reader.readAsText(input.files[0]);
+}
+</script>
+
     // MIGRACIÓN Y CARGA DE DATOS
     let savedData = localStorage.getItem('caloriasApp_v62');
     if(!savedData) {
@@ -766,4 +793,5 @@
 </script>
 </body>
 </html>
+
 
