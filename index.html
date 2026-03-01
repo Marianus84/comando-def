@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+
+
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --danger: #ef4444;   
+            --success: #10b981;  
+            --warning: #f59e0b;  
+            --cheat: #8b5cf6;    
+            --dark-card: #1e293b;
+            --accent: #3b82f6;
+            
+            /* Colores Focus */
+            --prot-color: #f97316; 
+            --fat-color: #eab308;  
+            --carb-color: #8b5cf6; 
+            --step-color: #0ea5e9; 
+            --kcal-dim: #6b7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 10px;
+            margin: 0;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .header {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0 0 5px 0; font-size: 1.3rem; text-align: center; color: #111827; text-transform: uppercase; font-weight: 900;}
+
+        /* --- SETTINGS --- */
+        .settings-btn {
+            display: block; width: 100%; text-align: center; background: none; border: none;
+            color: #3b82f6; margin-top: 5px; font-size: 0.9rem; cursor: pointer; text-decoration: underline; font-weight: 600;
+        }
+
+        .settings-panel {
+            display: none; margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd;
+        }
+        .settings-group { margin-bottom: 10px; }
+        .settings-group label { display: block; font-size: 0.75rem; font-weight: bold; color: #0369a1; margin-bottom: 3px; }
+        .settings-panel input { width: 100%; padding: 10px; border: 1px solid #7dd3fc; border-radius: 6px; box-sizing:border-box;}
+
+        /* --- GRID Y TARJETAS --- */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 15px;
+        }
+
+        .day-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 5px solid #d1d5db;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-card.locked { background: #f3f4f6; border-top-color: #9ca3af !important; opacity: 0.9; }
+        .day-card.friday-highlight { border: 2px solid var(--cheat); }
+        .day-card.fasting-day { border: 2px solid #3b82f6; background: #f8fafc; }
+        .day-card.omad-enforced { border: 3px solid #f59e0b; background: #fffbeb; }
+
+        .day-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        .day-title { 
+            font-weight: 900; 
+            font-size: 1.15rem; 
+            color: #1f2937; 
+        }
+        .status-badge { 
+            font-size: 0.7rem; 
+            text-transform: uppercase; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            letter-spacing: 0.5px; 
+        }
+        .badge-open { background: #dbeafe; color: #1e40af; }
+        .badge-closed { background: #e5e7eb; color: #6b7280; }
+        .badge-cheat { background: #ede9fe; color: #6d28d9; }
+        .badge-depuracion { background: #3b82f6; color: #ffffff; }
+        .badge-omad { background: #f59e0b; color: #ffffff; }
+
+        /* --- DASHBOARD CARD --- */
+        .dashboard-card {
+            background: var(--dark-card); 
+            color: white;
+            border-top: 5px solid #3b82f6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dash-header {
+            margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px;
+        }
+        .dash-title-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .dash-title-text { font-size: 1.1rem; font-weight: bold; }
+
+        .time-filters { display: flex; gap: 5px; justify-content: center; }
+        .time-btn {
+            background: #334155; border: 1px solid #475569; color: #94a3b8; 
+            padding: 4px 8px; border-radius: 6px; font-size: 0.65rem; cursor: pointer; flex: 1;
+        }
+        .time-btn.active {
+            background: var(--accent); color: white; border-color: var(--accent); font-weight: bold;
+        }
+
+        .mini-stats-row {
+            display: flex; justify-content: space-between; gap: 8px; margin-bottom: 15px;
+        }
+        .mini-stat {
+            background: #334155; padding: 10px 8px; border-radius: 8px; flex: 1; text-align: center;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .ms-label { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+        .ms-val { font-size: 1.1rem; font-weight: 800; margin: 2px 0; }
+        .ms-sub { font-size: 0.65rem; color: #cbd5e1; margin-bottom: 5px; }
+        
+        .ms-missing { 
+            font-size: 0.6rem; font-weight:bold; margin-top: 6px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .dash-bar-track {
+            width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: auto;
+        }
+        .dash-bar-fill { height: 100%; transition: width 0.3s; }
+
+        .chart-box {
+            flex: 1;
+            position: relative;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            min-height: 250px; 
+        }
+
+        /* --- HERO DE PERFORMANCE --- */
+        .hero-stats {
+            background: #f8fafc; border-radius: 8px; padding: 12px 5px;
+            margin-bottom: 15px; border: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .hero-main-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center; 
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e5e7eb;
+            min-height: 60px; 
+        }
+
+        .hero-col { text-align: center; flex: 1; display:flex; flex-direction:column; justify-content:center; }
+        
+        .hero-big-val { font-size: 1.8rem; font-weight: 900; line-height: 1; transition: all 0.3s;}
+        .hero-label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: bold; margin-top: 4px; }
+        
+        /* ESTILOS MENSAJES */
+        .msg-box {
+            padding: 5px; border-radius: 6px; font-size: 0.65rem; line-height: 1.2; font-weight: 700;
+            animation: fadeIn 0.5s ease; border: 1px solid;
+            display: flex; flex-direction: column; justify-content: center; min-height: 50px;
+        }
+        
+        .msg-success { background-color: #d1fae5; color: #065f46; border-color: #10b981; }
+        .msg-info { background-color: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+        .msg-push { background-color: #fef3c7; color: #92400e; border-color: #f59e0b; }
+        .msg-danger { background-color: #fee2e2; color: #991b1b; border-color: #ef4444; }
+        .msg-prot-only { background-color: #ffedd5; color: #9a3412; border-color: #f97316; }
+        
+        .msg-title { font-size: 0.75rem; font-weight: 900; margin-bottom: 2px; text-transform: uppercase; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero-secondary-row {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #4b5563;
+            font-weight: 600;
+            padding-top: 2px;
+            min-height: 5px; 
+        }
+        
+        /* Inputs Macros */
+        .inputs-area { display: flex; gap: 5px; margin-bottom: 5px; }
+        .input-box { flex: 1; }
+        .input-box input {
+            width: 100%; padding: 8px 2px; border: 1px solid #e5e7eb; border-radius: 8px; 
+            text-align: center; font-size: 0.9rem; box-sizing: border-box; background: #fff; color: #333; font-weight: 500;
+        }
+        .input-box input:focus { outline: none; border-color: #3b82f6; background: #eff6ff; }
+        .input-box input:disabled { background: #e5e7eb; color: #9ca3af; border-color: #e5e7eb; }
+        
+        .input-box label { 
+            display: block; font-size: 0.9rem; text-align: center; color: #111827; 
+            margin-bottom: 2px; font-weight: 900; text-transform: uppercase; 
+        }
+
+        .weight-daily-input {
+            width: 60px; padding: 5px; border: 1px solid #cbd5e1; border-radius: 5px; 
+            text-align: center; font-size: 0.8rem;
+        }
+
+        .confirm-btn {
+            width: 100%; padding: 8px; border: none; border-radius: 6px; cursor: pointer;
+            font-weight: bold; font-size: 0.85rem; transition: background 0.2s; margin-bottom: 10px;
+            background: #10b981; color: white;
+        }
+        .confirm-btn:hover { background: #059669; }
+        .confirm-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .lock-btn {
+            width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer;
+            font-weight: bold; font-size: 0.9rem; transition: background 0.2s; margin-top: 10px;
+        }
+        .btn-close { background: #1f2937; color: white; }
+
+        /* HIDDEN SECTIONS */
+        .hidden-info { display: none; animation: fadeIn 0.3s ease; }
+        .toggle-link {
+            text-align: center; font-size: 0.7rem; color: #9ca3af; 
+            cursor: pointer; margin-top: 8px; text-decoration: underline;
+        }
+        
+        .daily-breakdown-row {
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.75rem; 
+            color: #cbd5e1; 
+            margin-bottom: 4px;
+            border-bottom: 1px dotted rgba(255,255,255,0.1);
+            align-items: center;
+            padding-bottom: 3px;
+        }
+
+        #alert-box {
+            background-color: #fef2f2; color: #b91c1c; padding: 10px; border-radius: 8px;
+            margin-top: 15px; text-align: center; font-weight: 500; display: none; border: 1px solid #fecaca; font-size: 0.9rem;
+        }
+
+        .archive-btn {
+            background-color: #1e293b; color: #fff; width: 100%; padding: 15px; border: none;
+            border-radius: 8px; margin-top: 30px; font-weight: bold; cursor: pointer; border: 1px solid #334155;
+            font-size: 1rem;
+        }
+        .archive-btn:hover { background-color: #0f172a; }
+        .reset-link { 
+            display:block; text-align:center; margin-top:15px; color:#9ca3b8; font-size:0.75rem; text-decoration:underline; cursor:pointer; 
+        }
+        
+        .closed-day-msg {
+            text-align:center; padding: 10px; color:#9ca3af; font-size:0.8rem; font-weight:900; background: #e5e7eb; border-radius: 6px; margin-top: 10px;
+        }
+
+        /* OMAD TIMER STYLES */
+        .omad-timer {
+            background: #f59e0b;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* --- CASTIGO MODAL STYLES --- */
+        #punishment-modal {
+            display: none; position: fixed; inset: 0; background: rgba(153, 27, 27, 0.98); color: white;
+            z-index: 10000; overflow-y: auto; padding: 20px; font-family: monospace; text-align: center;
+        }
+        .punish-box {
+            background: #7f1d1d; border: 2px solid #ef4444; border-radius: 10px;
+            max-width: 600px; margin: 40px auto; padding: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .punish-input {
+            width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 5px; text-align:center;
+            font-size: 0.95rem; font-weight: bold; font-family: sans-serif; box-sizing:border-box; color: #111827;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Comando V62</h1>
+    <button class="settings-btn" onclick="toggleSettings()">⚙️ Configurar Objetivos</button>
+    
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-group">
+            <label>LÍMITE ENERGÍA SEMANAL (Kcal ref interna)</label>
+            <input type="number" id="limitKcal" oninput="fullRecalculate()">
+        </div>
+        <div class="settings-group">
+            <label>OBJETIVO PROTEÍNA SEMANAL (Gramos)</label>
+            <input type="number" id="goalProt" oninput="fullRecalculate()">
+        </div>
+        <div class="settings-group">
+            <label>OBJETIVO PASOS SEMANAL (Total)</label>
+            <input type="number" id="goalSteps" oninput="fullRecalculate()">
+        </div>
+        <div class="settings-group">
+            <label>PESO BASE (Para cálculo de calorías por pasos)</label>
+            <input type="number" id="weight" oninput="fullRecalculate()">
+        </div>
+        <div class="settings-group">
+            <label>PESO OBJETIVO (Gráfico)</label>
+            <input type="number" id="goalWeightInput" oninput="fullRecalculate()">
+        </div>
+        <div style="margin-top:15px; border-top:1px solid #bfdbfe; padding-top:10px;">
+            <label style="color:#ef4444;">ZONA DE PELIGRO</label>
+            <button onclick="clearHistory()" style="background:#fee2e2; color:#ef4444; border:none; padding:5px; border-radius:4px; font-size:0.7rem; cursor:pointer;">Borrar Historial de Peso</button>
+        </div>
+    </div>
+
+    <div id="alert-box"></div>
+</div>
+
+<div class="days-grid" id="daysGrid">
+    </div>
+
+<button class="archive-btn" onclick="archiveWeek()">💾 Cerrar Semana (Requiere Peso de Domingo)</button>
+<div class="reset-link" onclick="resetWithoutArchive()">Reiniciar semana sin guardar (Solo borrar)</div>
+
+<div style="text-align:center; margin-top:20px; margin-bottom:30px;">
+    <span onclick="toggleUnlockMenu()" style="font-size:0.6rem; color:#cbd5e1; cursor:pointer; text-decoration:none;">. . .</span>
+    <div id="unlock-container" style="display:none; margin-top:10px;">
+        <div style="font-size:0.65rem; color:#9ca3af; margin-bottom:5px;">Forzar reapertura de días:</div>
+        <div id="unlock-buttons" style="display:flex; gap:5px; justify-content:center; flex-wrap:wrap;"></div>
+    </div>
+</div>
+
+<div id="punishment-modal">
+    <div class="punish-box">
+        <h2 style="color:#fca5a5; font-size:1.5rem; text-transform:uppercase; margin-top:0;">🚨 Protocolo de Castigo 🚨</h2>
+        <p style="font-family:sans-serif; font-size:0.9rem; line-height:1.4;">Te excediste por ansiedad. Tu atracón quedó registrado y acaba de golpear tu presupuesto semanal. Para recuperar el control de la aplicación, tenés que pagar el precio físico.</p>
+        <div style="margin:20px 0; font-size:3rem; font-weight:bold; letter-spacing: 2px;" id="punish-timer">15:00</div>
+        <div style="background:#450a0a; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center; font-family:sans-serif;">
+            <p style="font-size:0.8rem; margin-bottom:10px; color:#fca5a5; font-weight:bold;">BAÑO DE REALIDAD (OBLIGATORIO)</p>
+            <a href="https://drive.google.com/drive/folders/1wzkDMJnr8cfq36HvbRfRizRLzXdJWDWq" target="_blank" id="punish-drive-link" onclick="markLinkAsClicked()" style="display:inline-block; background:#fef2f2; color:#991b1b; padding:10px 20px; font-weight:bold; border-radius:5px; text-decoration:none;">👁️ Abrir carpeta Mariano gordo</a>
+            <br>
+            <span id="link-status" style="color:#fca5a5; font-size:0.8rem; margin-top:10px; display:inline-block; font-weight:bold;">(❌ Click Pendiente)</span>
+        </div>
+        <div style="background:#450a0a; padding:15px; border-radius:8px; margin-bottom:20px; text-align:left; font-family:sans-serif;">
+            <label style="font-size:0.8rem; font-weight:bold; color:#fca5a5;">IMPUESTO DE PASOS (+3000 requeridos)</label><br>
+            <div style="color:#fecaca; font-size:0.75rem; margin-top:5px;">Meta para destrabar: <strong id="punish-target-steps">0</strong></div>
+            <input type="number" id="punish-current-steps" class="punish-input" placeholder="Actualizar pasos acá" oninput="updatePunishSteps(this.value)">
+            <div id="punish-steps-left" style="font-size:0.8rem; margin-top:5px; color:#fca5a5; font-weight:bold; text-align:center;"></div>
+        </div>
+        <div id="punish-phrase-section" style="opacity: 0.4; pointer-events: none; text-align:left; font-family:sans-serif;">
+            <div style="margin-bottom:15px; background:#5f1010; padding:10px; border-radius:5px; border: 1px solid #ef4444;">
+                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="punish-squats-check" style="width:20px; height:20px; margin-top:2px;" onchange="checkPunishPhrase()">
+                    <span style="font-size:0.8rem; color:#fca5a5; font-weight:bold; line-height:1.3;">IMPUESTO DE FUERZA:<br><span style="color:white; font-weight:normal;">Juro por mis objetivos que acabo de hacer 30 sentadillas o 20 flexiones de brazos para vaciar mi glucógeno y proteger mi testosterona.</span></span>
+                </label>
+            </div>
+            <p style="font-size:0.8rem; margin-bottom:5px; color:#fca5a5; font-weight:bold;">FIRMA DE HUMILLACIÓN Y REFLEXIÓN</p>
+            <p style="font-size:0.75rem; color:#fecaca;">Escribí EXACTAMENTE la siguiente frase para reprogramar tu cabeza:</p>
+            <p style="font-style:italic; font-weight:900; color:#ffffff; background:#5f1010; padding:15px; border-radius:5px; text-align:center; line-height:1.4;" id="punish-phrase-text"></p>
+            <textarea id="punish-phrase-input" class="punish-input" placeholder="Escribí la frase acá..." rows="3" oninput="checkPunishPhrase()"></textarea>
+            <button id="punish-unlock-btn" disabled style="background:#ef4444; color:white; padding:15px; width:100%; border:none; border-radius:5px; font-weight:bold; font-size:1.1rem; margin-top:10px; cursor:not-allowed; transition: background 0.3s;">Bloqueado hasta cumplir todo</button>
+        </div>
+    </div>
+</div>
+
+<div id="glucose-modal" style="display:none; position:fixed; inset:0; background:rgba(30,58,138,0.95); z-index:10000; padding:20px; text-align:center; color:white; font-family:sans-serif; overflow-y:auto;">
+    <div style="background:#1e3a8a; border:2px solid #3b82f6; border-radius:10px; max-width:500px; margin:40px auto; padding:20px; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
+        <h2 style="color:#93c5fd; text-transform:uppercase; margin-top:0;">⚠️ Pico de Glucosa Detectado</h2>
+        <p style="font-size:0.95rem; line-height:1.4;">Ingresaste 40g o más de carbohidratos de golpe. Para aplanar la curva de insulina y que no se guarde como grasa abdominal, tenés que mover el cuerpo AHORA MISMO.</p>
+        <div style="background:#172554; padding:20px; border-radius:8px; margin:20px 0;">
+            <label style="color:#bfdbfe; font-weight:bold; font-size:1.1rem;">WALK-TO-CLEAR (+1000 pasos)</label>
+            <p style="font-size:0.9rem; color:#93c5fd; margin-top:10px;">Meta a alcanzar para habilitar la carga: <strong id="gluc-target-steps" style="font-size:1.2rem; color:white;">0</strong></p>
+            <input type="number" id="gluc-current-steps" class="punish-input" placeholder="Actualizar pasos acá" oninput="checkGlucoseSteps(this.value)" style="color:#111827; margin-top:10px;">
+        </div>
+        <p style="font-size:0.8rem; color:#93c5fd; background:rgba(0,0,0,0.2); padding:10px; border-radius:5px;">Al confirmar, se activará el <strong>Bloqueo Anti-Montaña Rusa</strong>: la app quedará bloqueada por 3 horas para evitar que cedas al bajón de azúcar posterior.</p>
+        <button id="gluc-confirm-btn" disabled onclick="confirmGlucoseProtocol()" style="background:#3b82f6; color:white; padding:15px; width:100%; border:none; border-radius:5px; font-weight:bold; font-size:1.1rem; margin-top:10px; cursor:not-allowed; transition: background 0.3s;">Completar Pasos para Bloquear App</button>
+    </div>
+</div>
+
+<script>
+    const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+    const daysShort = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+    const FRIDAY_INDEX = 4;
+    const SUNDAY_INDEX = 6;
+    
+    let activePenaltyIndex = -1;
+    let punishInterval = null;
+    let pendingGlucoseData = null;
+
+    const alerts = [
+        "Estás ajustadísimo. Acordate de la performance en la cama.",
+        "Si te ven gordo tus amigos, no digas que no te avisé.",
+        "Más proteína = Más testosterona. No aflojes."
+    ];
+
+    const punishmentPhrases = [
+        "Acepto que tragar por ansiedad me hunde en la debilidad y el sobrepeso, pero si freno ahora recupero el control y aseguro mi energia para el Aikido.",
+        "Cada caloria de basura destruye mi testosterona y me acerca a que mis amigos me vean gordo, pero respetar mis reglas me construye un fisico intocable.",
+        "Ceder a este antojo me convierte en un pesimo ejemplo para mi hermano, mientras que aguantar y parar aca me da la fuerza para ayudarlo de verdad."
+    ];
+
+    // MIGRACIÓN Y CARGA DE DATOS
+    let savedData = localStorage.getItem('caloriasApp_v62');
+    if(!savedData) {
+        let oldData = localStorage.getItem('caloriasApp_v61') || localStorage.getItem('caloriasApp_v60');
+        if(oldData) {
+            let parsed = JSON.parse(oldData);
+            savedData = JSON.stringify(parsed);
+        }
+    }
+
+    let appData = savedData ? JSON.parse(savedData) : {
+        config: { limitKcal: 14000, goalProt: 1050, goalSteps: 70000, weight: 90, goalWeight: 80 },
+        days: days.map(d => ({ kcal: "", prot: "", carbs: "", fats: "", steps: "", weightVal: "", locked: false, _missingP: 0, _budget: 0, penalty: null, cooldownUntil: null })),
+        weightHistory: [], isFastingWeek: false, fastingDayIndex: -1, lastSundayWeight: null 
+    };
+
+    appData.days.forEach(d => { 
+        if(d.penalty === undefined) d.penalty = null; 
+        if(d.penalty && d.penalty.linkClicked === undefined) d.penalty.linkClicked = false;
+        if(d.penalty && d.penalty.triggersCooldown === undefined) d.penalty.triggersCooldown = false;
+        if(d.cooldownUntil === undefined) d.cooldownUntil = null;
+    });
+
+    document.getElementById('limitKcal').value = appData.config.limitKcal;
+    document.getElementById('goalProt').value = appData.config.goalProt;
+    document.getElementById('goalSteps').value = appData.config.goalSteps;
+    document.getElementById('weight').value = appData.config.weight;
+    document.getElementById('goalWeightInput').value = appData.config.goalWeight || 80;
+
+    let myChart = null;
+    let chartRange = 'all'; 
+
+    function buildGrid() {
+        const grid = document.getElementById('daysGrid');
+        grid.innerHTML = '';
+
+        let excessDays = [];
+        const staticBase = appData.config.limitKcal / 7.3;
+        appData.days.forEach((d, i) => {
+            const calculatedKcal = Math.round(((parseFloat(d.prot)||0) * 4) + ((parseFloat(d.carbs)||0) * 4) + ((parseFloat(d.fats)||0) * 9));
+            const sBonus = Math.round((parseFloat(d.steps)||0) * appData.config.weight * 0.0005);
+            const dayLimit = staticBase * (i === FRIDAY_INDEX ? 1.3 : 1) + sBonus;
+            excessDays[i] = (calculatedKcal > dayLimit);
+        });
+
+        appData.days.forEach((day, index) => {
+            const isLocked = day.locked;
+            const isFriday = (index === FRIDAY_INDEX);
+            const isSunday = (index === SUNDAY_INDEX);
+            const isFastingDay = (appData.isFastingWeek && index === appData.fastingDayIndex);
+            const enforceOMAD = (index >= 2 && excessDays[index-1] && excessDays[index-2]);
+            const now = new Date();
+            const currentHour = now.getHours();
+            const inOMADWindow = (currentHour >= 14 && currentHour < 17);
+            const inCooldown = day.cooldownUntil && day.cooldownUntil > Date.now();
+            const lockedClass = isLocked ? "locked" : "";
+            const fridayClass = isFriday ? "friday-highlight" : "";
+            const fastingClass = isFastingDay ? "fasting-day" : "";
+            const omadEnforcedClass = enforceOMAD ? "omad-enforced" : "";
+            let macrosDisabled = (isLocked || isFastingDay || inCooldown);
+            if (enforceOMAD && !inOMADWindow) macrosDisabled = true;
+            const inputStateMacros = macrosDisabled ? "disabled" : "";
+            const inputStateSteps = isLocked ? "disabled" : ""; 
+            
+            let badgeHtml = isLocked ? `<span class="status-badge badge-closed">Cerrado</span>` : `<span class="status-badge badge-open">Activo</span>`;
+            if(isFastingDay) badgeHtml = `<span class="status-badge badge-depuracion">DEPURACIÓN</span>`;
+            else if(enforceOMAD) badgeHtml = `<span class="status-badge badge-omad">OBLIGACIÓN OMAD</span>`;
+            else if(isFriday && !isLocked) badgeHtml = `<span class="status-badge badge-cheat">★ +30% Cal</span>`;
+
+            const btnHtml = isLocked ? `<div class="closed-day-msg">DÍA CERRADO 🔒</div>` : `<button class="lock-btn btn-close" onclick="toggleLock(${index})">🔒 Finalizar día</button>`;
+
+            let weightInputHtml = "";
+            if (isSunday) {
+                weightInputHtml = `<div style="background: #eff6ff; padding: 10px; border-radius: 8px; border: 2px dashed #3b82f6; text-align: center; margin-bottom: 15px;">
+                    <label style="font-size:0.75rem; color:#1d4ed8; font-weight:900; display:block; margin-bottom:5px;">⚖️ REGISTRO DE PESO (OBLIGATORIO)</label>
+                    <input type="number" class="weight-daily-input" placeholder="Kg" value="${day.weightVal}" oninput="updateWeight(${index}, this.value)" style="font-size: 1.1rem; width: 80px; padding: 5px; font-weight: bold; color: #1e3a8a; border-color:#93c5fd;">
+                </div>`;
+            }
+
+            let omadTimerHtml = enforceOMAD && !isLocked ? `<div class="omad-timer" id="omad-timer-${index}">Calculando ventana...</div>` : "";
+
+            let confirmBtnHtml = "";
+            if (!isLocked && !isFastingDay) {
+                if (inCooldown) {
+                    confirmBtnHtml = `<div class="cooldown-msg" id="cd-${index}" data-until="${day.cooldownUntil}" style="background:#1e40af; color:white; padding:10px; text-align:center; border-radius:6px; font-weight:bold; font-size:0.85rem; margin-bottom:10px;">Bloqueo Activo...</div>`;
+                } else if (enforceOMAD && !inOMADWindow) {
+                    confirmBtnHtml = `<div style="background:#9ca3af; color:white; padding:10px; text-align:center; border-radius:6px; font-weight:bold; font-size:0.85rem; margin-bottom:10px;">Ventana Cerrada</div>`;
+                } else {
+                    confirmBtnHtml = `<button class="confirm-btn" id="btn-confirm-${index}" onclick="confirmDay(${index})">✅ Confirmar Datos</button>`;
+                }
+            }
+
+            const html = `
+            <div class="day-card ${lockedClass} ${fridayClass} ${fastingClass} ${omadEnforcedClass}" id="card-${index}">
+                <div class="day-header"><span class="day-title">${days[index]}</span>${badgeHtml}</div>
+                ${omadTimerHtml}
+                ${weightInputHtml}
+                <div class="hero-stats">
+                    <div class="hero-main-row">
+                        <div class="hero-col" id="hero-col-prot-${index}"></div>
+                        <div style="width:1px; background:#e5e7eb; height:40px; margin:0 5px;"></div>
+                        <div class="hero-col" id="hero-col-steps-${index}"></div>
+                    </div>
+                    <div class="hero-secondary-row" id="hero-macro-row-${index}"></div>
+                </div>
+                <div class="inputs-area">
+                    <div class="input-box"><label style="color:var(--prot-color)">P</label><input type="number" id="in-prot-${index}" placeholder="g" value="${isFastingDay ? 0 : day.prot}" ${inputStateMacros}></div>
+                    <div class="input-box"><label style="color:var(--fat-color)">F</label><input type="number" id="in-fat-${index}" placeholder="g" value="${isFastingDay ? 0 : day.fats}" ${inputStateMacros}></div>
+                    <div class="input-box"><label style="color:var(--carb-color)">C</label><input type="number" id="in-carb-${index}" placeholder="g" value="${isFastingDay ? 0 : day.carbs}" ${inputStateMacros}></div>
+                    <div class="input-box"><label style="color:var(--step-color)">Pasos</label><input type="number" id="in-steps-${index}" placeholder="#" value="${day.steps}" ${inputStateSteps} oninput="updateLiveSteps(${index}, this.value)"></div>
+                </div>
+                ${confirmBtnHtml}
+                <div style="text-align:right; font-size:0.7rem; color:#64748b; margin-top:2px;" id="burn-feedback-${index}">+0 kcal ganadas</div>
+                ${btnHtml}
+            </div>`;
+            grid.insertAdjacentHTML('beforeend', html);
+        });
+
+        // Dashboard
+        const summaryHtml = `
+            <div class="day-card dashboard-card">
+                <div class="dash-header">
+                    <div class="dash-title-row"><span class="dash-title-text">PANEL DE CONTROL</span><span>📈</span></div>
+                    <div class="time-filters">
+                        <button class="time-btn ${chartRange === 'all' ? 'active' : ''}" onclick="setChartRange('all')">Todo</button>
+                        <button class="time-btn ${chartRange === '3m' ? 'active' : ''}" onclick="setChartRange('3m')">3 Meses</button>
+                        <button class="time-btn ${chartRange === '1m' ? 'active' : ''}" onclick="setChartRange('1m')">1 Mes</button>
+                    </div>
+                </div>
+                <div class="mini-stats-row">
+                    <div class="mini-stat">
+                        <div class="ms-label">Prot Semanal</div><div class="ms-val" id="sum-prot">0</div><div class="ms-sub">/ <span id="goal-sum-prot">0</span></div>
+                        <div class="dash-bar-track"><div class="dash-bar-fill" id="db-prot" style="width:0%; background:#f59e0b"></div></div>
+                        <div class="ms-missing" id="missing-prot">Calc...</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="ms-label">Pasos Semanal</div><div class="ms-val" id="sum-steps">0</div><div class="ms-sub">/ <span id="goal-sum-steps">0</span></div>
+                        <div class="dash-bar-track"><div class="dash-bar-fill" id="db-steps" style="width:0%; background:#f59e0b"></div></div>
+                        <div class="ms-missing" id="missing-steps">Calc...</div>
+                    </div>
+                    <div class="mini-stat hidden-info" id="weekly-kcal-box" style="flex-direction:column; justify-content:start;">
+                        <div class="ms-label">Kcal Semanal</div><div class="ms-val" id="sum-kcal" style="font-size:1rem;">0</div><div class="ms-sub">/ <span id="goal-sum-kcal">0</span></div>
+                        <div class="dash-bar-track" style="width:100%"><div class="dash-bar-fill" id="db-kcal" style="width:0%; background:#10b981"></div></div>
+                        <div class="ms-missing" id="missing-kcal" style="margin-bottom:8px;">Calc...</div>
+                        <div id="weekly-breakdown-list" style="width:100%; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:auto;"></div>
+                    </div>
+                </div>
+                <div class="toggle-link" style="color: #94a3b8; margin-bottom:10px;" onclick="toggleWeeklyKcal()">👁️ Mostrar Kcal Semanal</div>
+                <div class="chart-box"><canvas id="weightChart"></canvas></div>
+            </div>`;
+        grid.insertAdjacentHTML('beforeend', summaryHtml);
+
+        initChart();
+        updateValuesOnly(); 
+        checkActivePenalties();
+        scrollToToday(); // <--- LLAMADA AL FOCO
+    }
+
+    // FUNCIÓN PARA HACER FOCO EN EL DÍA ACTUAL
+    function scrollToToday() {
+        let now = new Date();
+        let dayIdx = now.getDay(); // 0 es Domingo, 1 Lunes...
+        let adjustedIdx = (dayIdx === 0) ? 6 : dayIdx - 1; // Convertir a 0=Lunes...6=Domingo
+        
+        setTimeout(() => {
+            const todayCard = document.getElementById(`card-${adjustedIdx}`);
+            if (todayCard) {
+                todayCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300);
+    }
+
+    // Intervalos, Funciones de Update, Confirmación, Castigos y Chart se mantienen íntegros
+    setInterval(() => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        document.querySelectorAll('.cooldown-msg').forEach(el => {
+            const until = parseInt(el.getAttribute('data-until'));
+            const diff = until - Date.now();
+            if (diff <= 0) { buildGrid(); } else {
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                el.innerText = `Bloqueo Anti-Atracón: ${h}h ${m}m ${s}s`;
+            }
+        });
+        document.querySelectorAll('[id^="omad-timer-"]').forEach(el => {
+            if (currentHour < 14) {
+                const target = new Date(); target.setHours(14,0,0,0);
+                const diff = target - now;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                el.innerText = `Ventana abre en: ${h}h ${m}m ${s}s`;
+            } else if (currentHour >= 14 && currentHour < 17) {
+                const target = new Date(); target.setHours(17,0,0,0);
+                const diff = target - now;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                el.innerText = `Ventana CIERRA en: ${h}h ${m}m ${s}s`;
+            } else {
+                el.innerText = `Ventana Cerrada (Mañana)`;
+            }
+        });
+    }, 1000);
+
+    function updateLiveSteps(index, val) { if (!appData.days[index].locked) { appData.days[index].steps = val; save(); updateValuesOnly(); } }
+    function updateWeight(index, val) { appData.days[index].weightVal = val; save(); }
+
+    function confirmDay(index) {
+        const day = appData.days[index];
+        if (day.locked) return;
+        const oldProt = day.prot; const oldFat = day.fats; const oldCarbs = day.carbs; const oldSteps = day.steps; const oldKcal = day.kcal || 0;
+        const newProt = parseFloat(document.getElementById(`in-prot-${index}`).value) || 0;
+        const newFat = parseFloat(document.getElementById(`in-fat-${index}`).value) || 0;
+        const newCarb = parseFloat(document.getElementById(`in-carb-${index}`).value) || 0;
+        const newSteps = parseFloat(document.getElementById(`in-steps-${index}`).value) || 0;
+        const carbIncreased = newCarb > (parseFloat(oldCarbs) || 0);
+        const addedCarbs = newCarb - (parseFloat(oldCarbs) || 0);
+        day.prot = document.getElementById(`in-prot-${index}`).value === "" ? "" : newProt;
+        day.fats = document.getElementById(`in-fat-${index}`).value === "" ? "" : newFat;
+        day.carbs = document.getElementById(`in-carb-${index}`).value === "" ? "" : newCarb;
+        day.steps = document.getElementById(`in-steps-${index}`).value === "" ? "" : newSteps;
+        save(); updateValuesOnly(); 
+        const diff = day._budget - day.kcal; 
+        if (diff <= -250 && day._missingP <= 0 && day.kcal > oldKcal && (carbIncreased || newFat > (parseFloat(oldFat)||0))) {
+            if (!day.penalty || day.penalty.cleared) {
+                day.penalty = { endTime: Date.now() + (15*60*1000), targetSteps: (parseFloat(day.steps)||0)+3000, phrase: punishmentPhrases[Math.floor(Math.random()*punishmentPhrases.length)], cleared: false, linkClicked: false, triggersCooldown: (addedCarbs>=40) };
+                save(); updateValuesOnly(); startPunishment(index); return; 
+            }
+        }
+        if (addedCarbs >= 40) { pendingGlucoseData = { index, newProt, newFat, newCarb, newSteps, targetSteps: (parseFloat(newSteps)||0) + 1000 }; showGlucoseModal(); return; }
+        if (diff <= -300 && day._missingP <= 0) { setTimeout(() => forceCloseDay(index), 10); } else {
+            const btn = document.getElementById(`btn-confirm-${index}`);
+            if(btn) { btn.innerText = "¡Guardado!"; btn.style.background = "#059669"; setTimeout(() => { btn.innerText = "✅ Confirmar Datos"; btn.style.background = "#10b981"; }, 1000); }
+        }
+    }
+
+    function showGlucoseModal() { document.getElementById('glucose-modal').style.display = 'block'; document.getElementById('gluc-target-steps').innerText = pendingGlucoseData.targetSteps; document.getElementById('gluc-current-steps').value = pendingGlucoseData.newSteps || ""; checkGlucoseSteps(pendingGlucoseData.newSteps); }
+    function checkGlucoseSteps(val) { if (!pendingGlucoseData) return; pendingGlucoseData.newSteps = parseFloat(val) || 0; const btn = document.getElementById('gluc-confirm-btn'); btn.disabled = (pendingGlucoseData.newSteps < pendingGlucoseData.targetSteps); btn.style.background = btn.disabled ? '#3b82f6' : '#10b981'; }
+    function confirmGlucoseProtocol() { if (!pendingGlucoseData) return; const { index, newSteps } = pendingGlucoseData; appData.days[index].steps = newSteps; appData.days[index].cooldownUntil = Date.now() + (3*60*60*1000); save(); document.getElementById('glucose-modal').style.display = 'none'; pendingGlucoseData = null; buildGrid(); }
+    function checkActivePenalties() { appData.days.forEach((day, index) => { if (day.penalty && day.penalty.cleared === false) startPunishment(index); }); }
+    function startPunishment(index) { activePenaltyIndex = index; document.getElementById('punishment-modal').style.display = 'block'; document.getElementById('punish-phrase-text').innerText = appData.days[index].penalty.phrase; document.getElementById('punish-current-steps').value = appData.days[index].steps || ""; document.getElementById('punish-target-steps').innerText = appData.days[index].penalty.targetSteps; clearInterval(punishInterval); punishInterval = setInterval(updatePunishmentUI, 1000); updatePunishmentUI(); }
+    function markLinkAsClicked() { if (activePenaltyIndex !== -1) { appData.days[activePenaltyIndex].penalty.linkClicked = true; save(); updatePunishmentUI(); } }
+    function updatePunishmentUI() {
+        if (activePenaltyIndex === -1) return;
+        const day = appData.days[activePenaltyIndex];
+        const timeLeft = Math.max(0, day.penalty.endTime - Date.now());
+        document.getElementById('punish-timer').innerText = `${Math.floor(timeLeft/60000).toString().padStart(2,'0')}:${Math.floor((timeLeft%60000)/1000).toString().padStart(2,'0')}`;
+        const stepsLeft = Math.max(0, day.penalty.targetSteps - (parseFloat(day.steps)||0));
+        document.getElementById('punish-steps-left').innerText = stepsLeft > 0 ? `Faltan caminar ${stepsLeft} pasos.` : `¡Pasos completados!`;
+        document.getElementById('link-status').innerText = day.penalty.linkClicked ? "(✅ Fotos vistas)" : "(❌ Click Pendiente)";
+        const section = document.getElementById('punish-phrase-section');
+        if (timeLeft === 0 && stepsLeft === 0 && day.penalty.linkClicked) { section.style.opacity = '1'; section.style.pointerEvents = 'auto'; checkPunishPhrase(); }
+    }
+    function updatePunishSteps(val) { if (activePenaltyIndex !== -1) { appData.days[activePenaltyIndex].steps = val; save(); updateValuesOnly(); updatePunishmentUI(); } }
+    function checkPunishPhrase() {
+        if (activePenaltyIndex === -1) return;
+        const day = appData.days[activePenaltyIndex];
+        const inputVal = document.getElementById('punish-phrase-input').value;
+        const squatsChecked = document.getElementById('punish-squats-check').checked;
+        const btn = document.getElementById('punish-unlock-btn');
+        if (inputVal.trim() === day.penalty.phrase.trim() && squatsChecked) { btn.disabled = false; btn.style.background = '#10b981'; btn.innerText = "Desbloquear Día"; btn.onclick = unlockPunishment; } else { btn.disabled = true; btn.innerText = "Pendiente..."; }
+    }
+    function unlockPunishment() { const day = appData.days[activePenaltyIndex]; day.penalty.cleared = true; if (day.penalty.triggersCooldown) day.cooldownUntil = Date.now() + (3*60*60*1000); save(); document.getElementById('punishment-modal').style.display = 'none'; clearInterval(punishInterval); activePenaltyIndex = -1; buildGrid(); }
+    function forceCloseDay(index) { if(appData.days[index].locked) return; alert("🚨 CIERRE POR EXCESO 🚨"); appData.days[index].locked = true; save(); buildGrid(); }
+
+    function updateValuesOnly() {
+        let totalConsumedKcal = 0, totalConsumedProt = 0, totalWalkedSteps = 0, totalStepsKcalBonus = 0;
+        appData.days.forEach((d, index) => {
+            const isFastingDay = (appData.isFastingWeek && index === appData.fastingDayIndex);
+            const p = isFastingDay ? 0 : (parseFloat(d.prot) || 0), c = isFastingDay ? 0 : (parseFloat(d.carbs) || 0), f = isFastingDay ? 0 : (parseFloat(d.fats) || 0);
+            const calcKcal = Math.round((p * 4) + (c * 4) + (f * 9));
+            d.kcal = calcKcal; const s = parseFloat(d.steps) || 0;
+            totalConsumedKcal += calcKcal; totalConsumedProt += p; totalWalkedSteps += s; totalStepsKcalBonus += Math.round(s * appData.config.weight * 0.0005);
+        });
+        const finalLimitKcal = appData.config.limitKcal + totalStepsKcalBonus - (appData.isFastingWeek ? 2000 : 0);
+        document.getElementById('sum-prot').innerText = totalConsumedProt; document.getElementById('goal-sum-prot').innerText = appData.config.goalProt;
+        document.getElementById('sum-steps').innerText = totalWalkedSteps; document.getElementById('goal-sum-steps').innerText = appData.config.goalSteps;
+        document.getElementById('db-prot').style.width = Math.min((totalConsumedProt/appData.config.goalProt)*100, 100) + "%";
+        document.getElementById('db-steps').style.width = Math.min((totalWalkedSteps/appData.config.goalSteps)*100, 100) + "%";
+        document.getElementById('sum-kcal').innerText = totalConsumedKcal; document.getElementById('goal-sum-kcal').innerText = finalLimitKcal;
+        document.getElementById('db-kcal').style.width = Math.min((totalConsumedKcal/finalLimitKcal)*100, 100) + "%";
+        updateChartData();
+        let usedKcal = 0, usedProt = 0, usedSteps = 0;
+        appData.days.forEach((d, i) => { if(d.locked) { usedKcal += d.kcal; usedProt += (parseFloat(d.prot)||0); usedSteps += (parseFloat(d.steps)||0); } });
+        let totalRemainingWeight = 0, remProtDays = 0, remStepDays = 0;
+        appData.days.forEach((d, i) => { if (!d.locked) { remStepDays++; if (!(appData.isFastingWeek && i === appData.fastingDayIndex)) { remProtDays++; totalRemainingWeight += (i === FRIDAY_INDEX ? 1.3 : 1.0); } } });
+        let baseKcalUnit = totalRemainingWeight > 0 ? (finalLimitKcal - usedKcal) / totalRemainingWeight : 0;
+        let dailyProt = remProtDays > 0 ? Math.floor((appData.config.goalProt - usedProt) / remProtDays) : 0;
+        let dailySteps = remStepDays > 0 ? Math.floor((appData.config.goalSteps - usedSteps) / remStepDays) : 0;
+        let unlockHtml = "";
+        appData.days.forEach((day, index) => {
+            if (day.locked) unlockHtml += `<button onclick="toggleLock(${index})" style="background:#334155; color:#cbd5e1; border:1px solid #475569; border-radius:4px; padding:4px 8px; font-size:0.7rem; cursor:pointer;">${daysShort[index]}</button>`;
+            const isFastingDay = (appData.isFastingWeek && index === appData.fastingDayIndex);
+            let thisDayBudgetKcal = (!day.locked && !isFastingDay) ? Math.floor(baseKcalUnit * (index === FRIDAY_INDEX ? 1.3 : 1.0)) : (day.locked ? day.kcal : 0);
+            appData.days[index]._budget = thisDayBudgetKcal;
+            let showKcal = day.locked ? day.kcal : (thisDayBudgetKcal - day.kcal);
+            let targetP = isFastingDay ? 0 : (day.locked ? (parseFloat(day.prot)||0) : dailyProt);
+            let missingP = Math.max(0, targetP - (parseFloat(day.prot)||0));
+            appData.days[index]._missingP = missingP;
+            const heroMacroRow = document.getElementById(`hero-macro-row-${index}`);
+            if (isFastingDay) heroMacroRow.innerHTML = `<div class="msg-box msg-info"><div class="msg-title">DÍA DE DEPURACIÓN</div>Equilibrando energía.</div>`;
+            else if (!day.locked && showKcal < 0) heroMacroRow.innerHTML = (missingP > 0) ? `<div class="msg-box msg-prot-only"><div class="msg-title">⚠ EXCESO</div>COMÉ <strong>SOLO PROT</strong>.</div>` : `<div class="msg-box msg-danger"><div class="msg-title">⛔ STOP</div>Basta por hoy.</div>`;
+            else heroMacroRow.innerHTML = "";
+            document.getElementById(`hero-col-prot-${index}`).innerHTML = isFastingDay ? `<div class="msg-box" style="background:#1e293b; color:#f8fafc; border:1px solid #475569;"><div class="msg-title" style="color:#60a5fa;">AYUNO</div></div>` : `<div class="hero-big-val" style="color:var(--prot-color)">${missingP}</div><div class="hero-label">Faltan Prot (g)</div>`;
+            let valSteps = parseFloat(day.steps) || 0;
+            let targetS = day.locked ? valSteps : dailySteps;
+            document.getElementById(`hero-col-steps-${index}`).innerHTML = `<div class="hero-big-val" style="color:var(--step-color)">${day.locked ? valSteps : Math.max(0, targetS - valSteps)}</div><div class="hero-label">${day.locked ? "Pasos" : "Faltan Pasos"}</div>`;
+            const burnFB = document.getElementById(`burn-feedback-${index}`);
+            if(burnFB) burnFB.innerText = `+${Math.round(valSteps * appData.config.weight * 0.0005)} kcal ganadas`;
+        });
+        document.getElementById('unlock-buttons').innerHTML = unlockHtml;
+    }
+
+    function toggleWeeklyKcal() { const el = document.getElementById(`weekly-kcal-box`); el.style.display = (el.style.display === "none" || el.style.display === "") ? "flex" : "none"; }
+    function toggleUnlockMenu() { const el = document.getElementById('unlock-container'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+    function initChart() { myChart = new Chart(document.getElementById('weightChart').getContext('2d'), { type: 'bar', data: { labels: [], datasets: [ { type: 'bar', label: 'Peso', data: [], backgroundColor: '#3b82f6', borderRadius: 4, order: 2 }, { type: 'line', label: 'Meta', data: [], borderColor: '#10b981', borderWidth: 1, borderDash: [5, 5], pointRadius: 0, order: 1 } ] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } }); }
+    function updateChartData() { if(!myChart) return; const history = appData.weightHistory || []; let subset = history.slice(chartRange === '1m' ? -4 : (chartRange === '3m' ? -12 : 0)); myChart.data.labels = subset.map(h => h.date); myChart.data.datasets[0].data = subset.map(h => h.weight); myChart.data.datasets[1].data = Array(subset.length || 1).fill(appData.config.goalWeight || 0); myChart.update(); }
+    function setChartRange(range) { chartRange = range; save(); buildGrid(); }
+    function toggleSettings() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
+    function fullRecalculate() { appData.config.limitKcal = parseFloat(document.getElementById('limitKcal').value)||0; appData.config.goalProt = parseFloat(document.getElementById('goalProt').value)||0; appData.config.goalSteps = parseFloat(document.getElementById('goalSteps').value)||0; appData.config.weight = parseFloat(document.getElementById('weight').value)||0; appData.config.goalWeight = parseFloat(document.getElementById('goalWeightInput').value)||0; save(); updateValuesOnly(); }
+    function toggleLock(index) { appData.days[index].locked = !appData.days[index].locked; save(); buildGrid(); }
+    function archiveWeek() { let w = parseFloat(appData.days[SUNDAY_INDEX].weightVal); if (isNaN(w) || w <= 0) { alert("Registrá el peso."); return; } appData.weightHistory.push({ date: new Date().getDate()+"/"+(new Date().getMonth()+1), weight: w }); appData.days = days.map(d => ({ kcal: "", prot: "", carbs: "", fats: "", steps: "", weightVal: "", locked: false, _missingP: 0, _budget: 0, penalty: null, cooldownUntil: null })); appData.config.weight = w; save(); location.reload(); }
+    function resetWithoutArchive() { if(confirm("¿Borrar todo?")) { appData.days = days.map(d => ({ kcal: "", prot: "", carbs: "", fats: "", steps: "", weightVal: "", locked: false, _missingP: 0, _budget: 0, penalty: null, cooldownUntil: null })); save(); buildGrid(); } }
+    function clearHistory() { if(confirm("¿Borrar historial?")) { appData.weightHistory = []; save(); updateChartData(); } }
+    function save() { localStorage.setItem('caloriasApp_v62', JSON.stringify(appData)); }
+
+    buildGrid();
+</script>
+</body>
+</html>
